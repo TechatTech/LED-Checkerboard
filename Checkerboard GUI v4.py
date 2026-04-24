@@ -106,12 +106,23 @@ class CheckerBoardGUI(tk.Tk):
 
         # If no piece was clicked, move selected piece
         if self.selected_piece is not None:
-            self.canvas.coords(self.selected_piece.canvas_id, clicked_x, clicked_y)
+            # Snap movement to the checkerboard squares
+            start_x = 42
+            start_y = 40
+            square_size = 80
 
-            self.selected_piece.x = clicked_x
-            self.selected_piece.y = clicked_y
+            col = round((clicked_x - start_x) / square_size)
+            row = round((clicked_y - start_y) / square_size)
 
-            print("Moved piece to:", clicked_x, clicked_y)
+            new_x = start_x + col * square_size
+            new_y = start_y + row * square_size
+
+            self.canvas.coords(self.selected_piece.canvas_id, new_x, new_y)
+
+            self.selected_piece.x = new_x
+            self.selected_piece.y = new_y
+
+            print("Moved piece to:", new_x, new_y)
 
             self.selected_piece = None
     
