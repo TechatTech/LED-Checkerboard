@@ -41,6 +41,8 @@ class CheckerBoardGUI(tk.Tk):
                 y = start_y + row * square_size
 
                 piece = Piece("B", self.blue_checker_image)
+                piece.x = x
+                piece.y = y
                 piece.canvas_id = self.canvas.create_image(x, y, image=piece.image, anchor="center")
                 self.pieces.append(piece)
 
@@ -51,6 +53,8 @@ class CheckerBoardGUI(tk.Tk):
                 y = start_y + row * square_size
 
                 piece = Piece("R", self.red_checker_image)
+                piece.x = x
+                piece.y = y
                 piece.canvas_id = self.canvas.create_image(x, y, image=piece.image, anchor="center")
                 self.pieces.append(piece)
 
@@ -80,7 +84,37 @@ class CheckerBoardGUI(tk.Tk):
 
         dec_btn2 = tk.Button(btn_frame, text="Decrease", command=self.decrease_counter2)
         dec_btn2.pack(side='left', padx=10)
+
+        # Used to keep track of which checker is selected
+        self.selected_piece = None
+
+        # Allow mouse clicks on the canvas
+        self.canvas.bind("<Button-1>", self.on_canvas_click)
         
+    def on_canvas_click(self, event):
+        clicked_x = event.x
+        clicked_y = event.y
+
+        # Check if a piece was clicked
+        for piece in self.pieces:
+            piece_x, piece_y = self.canvas.coords(piece.canvas_id)
+
+            if abs(clicked_x - piece_x) < 35 and abs(clicked_y - piece_y) < 35:
+                self.selected_piece = piece
+                print("Selected piece:", piece.team)
+                return
+
+        # If no piece was clicked, move selected piece
+        if self.selected_piece is not None:
+            self.canvas.coords(self.selected_piece.canvas_id, clicked_x, clicked_y)
+
+            self.selected_piece.x = clicked_x
+            self.selected_piece.y = clicked_y
+
+            print("Moved piece to:", clicked_x, clicked_y)
+
+            self.selected_piece = None
+    
     def update_counter1_image(self):
         # Update the canvas image to the current counter 1 value
         self.canvas.itemconfig(self.counter1_image_id, image=self.number_images[self.counter1_value])
