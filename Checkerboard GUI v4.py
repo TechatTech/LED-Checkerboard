@@ -1,6 +1,11 @@
 import tkinter as tk
 import os
 
+class Piece:
+    def __init__(self, team, image):
+        self.team = team
+        self.image = image
+
 class CheckerBoardGUI(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -16,6 +21,38 @@ class CheckerBoardGUI(tk.Tk):
         self.bg_image = tk.PhotoImage(file="Project_folder/background/background.png")
         # Place background image on the page
         self.canvas.create_image(0, 0, image=self.bg_image, anchor='nw')
+
+        # Load checker images
+        self.blue_checker_image = tk.PhotoImage(file=r"C:\Users\domin\AppData\Local\Programs\Python\Python313\Project_folder\blue_checkers\Blue checker.png")
+        self.red_checker_image = tk.PhotoImage(file=r"C:\Users\domin\AppData\Local\Programs\Python\Python313\Project_folder\red_checkers\Red checker.png")
+
+        # Create checker pieces
+        self.pieces = []
+
+        # Board positioning values
+        start_x = 42
+        start_y = 40
+        square_size = 80
+
+        # Blue checkers on top 3 rows
+        for row in range(3):
+            for col in range(4):
+                x = start_x + ((col * 2) + ((row + 1) % 2)) * square_size
+                y = start_y + row * square_size
+
+                piece = Piece("B", self.blue_checker_image)
+                piece.canvas_id = self.canvas.create_image(x, y, image=piece.image, anchor="center")
+                self.pieces.append(piece)
+
+        # Red checkers on bottom 3 rows
+        for row in range(5, 8):
+            for col in range(4):
+                x = start_x + ((col * 2) + ((row + 1) % 2)) * square_size
+                y = start_y + row * square_size
+
+                piece = Piece("R", self.red_checker_image)
+                piece.canvas_id = self.canvas.create_image(x, y, image=piece.image, anchor="center")
+                self.pieces.append(piece)
 
         # Load counter icon images
         self.number_images = {}
