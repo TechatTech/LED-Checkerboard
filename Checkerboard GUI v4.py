@@ -117,6 +117,18 @@ class CheckerBoardGUI(tk.Tk):
             new_x = start_x + col * square_size
             new_y = start_y + row * square_size
 
+            old_x = self.selected_piece.x
+            old_y = self.selected_piece.y
+
+            x_change = abs(new_x - old_x)
+            y_change = abs(new_y - old_y)
+
+            # Only allow diagonal movement by one square
+            if x_change != square_size or y_change != square_size:
+                print("Invalid move: checkers must move diagonally one square.")
+                self.selected_piece = None
+                return
+            
             self.canvas.coords(self.selected_piece.canvas_id, new_x, new_y)
 
             self.selected_piece.x = new_x
