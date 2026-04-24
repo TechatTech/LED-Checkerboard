@@ -167,6 +167,8 @@ class CheckerBoardGUI(tk.Tk):
                 middle_x = (old_x + new_x) / 2
                 middle_y = (old_y + new_y) / 2
 
+                captured_piece_found = False
+
                 for piece in self.pieces:
                     if piece.x == middle_x and piece.y == middle_y:
                         if piece.team == self.selected_piece.team:
@@ -176,8 +178,12 @@ class CheckerBoardGUI(tk.Tk):
 
                         self.canvas.delete(piece.canvas_id)
                         self.pieces.remove(piece)
-                        print("Captured piece:", piece.team)
+                        print("Captured Piece:", piece.team)
+                        captured_piece_found = True
                         break
+
+                if captured_piece_found == False:
+                    print("Invalid Move: No checker to jump over.")
             
             self.canvas.coords(self.selected_piece.canvas_id, new_x, new_y)
 
