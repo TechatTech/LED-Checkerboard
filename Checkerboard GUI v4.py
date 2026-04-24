@@ -129,6 +129,14 @@ class CheckerBoardGUI(tk.Tk):
                 self.selected_piece = None
                 return
             
+            # Do not allow moving onto another checker
+            for piece in self.pieces:
+                if piece != self.selected_piece:
+                    if piece.x == new_x and piece.y == new_y:
+                        print("Invalid move: that square already has a checker.")
+                        self.selected_piece = None
+                        return
+            
             self.canvas.coords(self.selected_piece.canvas_id, new_x, new_y)
 
             self.selected_piece.x = new_x
