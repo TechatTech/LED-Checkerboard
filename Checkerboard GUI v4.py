@@ -131,10 +131,14 @@ class CheckerBoardGUI(tk.Tk):
             x_change = abs(new_x - old_x)
             y_change = abs(new_y - old_y)
 
-            # Only allow diagonal movement by one square
-            if x_change != square_size or y_change != square_size:
-                print("Invalid move: checkers must move diagonally one square.")
+            # Allow diagonal movement by one square OR jumping by two squares
+            if not (
+                (x_change == square_size and y_change == square_size) or
+                (x_change == 2 * square_size and y_change == 2 * square_size)
+            ):
+                print("Invalid move: checkers must move diagonally.")
                 self.selected_piece = None
+                returnelected_piece = None
                 return
 
             # Enforce forward movement
