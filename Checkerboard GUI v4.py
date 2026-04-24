@@ -136,7 +136,7 @@ class CheckerBoardGUI(tk.Tk):
                 (x_change == square_size and y_change == square_size) or
                 (x_change == 2 * square_size and y_change == 2 * square_size)
             ):
-                print("Invalid move: checkers must move diagonally.")
+                print("Invalid Move: Checkers must move diagonally.")
                 self.selected_piece = None
                 returnelected_piece = None
                 return
@@ -144,13 +144,13 @@ class CheckerBoardGUI(tk.Tk):
             # Enforce forward movement
             if self.selected_piece.team == "B":
                 if new_y <= old_y:
-                    print("Invalid move: blue pieces must move forward.")
+                    print("Invalid Move: Blue pieces must move forward.")
                     self.selected_piece = None
                     return
 
             if self.selected_piece.team == "R":
                 if new_y >= old_y:
-                    print("Invalid move: red pieces must move forward.")
+                    print("Invalid Move: Red pieces must move forward.")
                     self.selected_piece = None
                     return
             
@@ -158,7 +158,7 @@ class CheckerBoardGUI(tk.Tk):
             for piece in self.pieces:
                 if piece != self.selected_piece:
                     if piece.x == new_x and piece.y == new_y:
-                        print("Invalid move: that square already has a checker.")
+                        print("Invalid Move: That square already has a checker.")
                         self.selected_piece = None
                         return
 
@@ -169,6 +169,11 @@ class CheckerBoardGUI(tk.Tk):
 
                 for piece in self.pieces:
                     if piece.x == middle_x and piece.y == middle_y:
+                        if piece.team == self.selected_piece.team:
+                            print("Invalid Move: You cannot jump over your own checker.")
+                            self.selected_piece = None
+                            return
+
                         self.canvas.delete(piece.canvas_id)
                         self.pieces.remove(piece)
                         print("Captured piece:", piece.team)
