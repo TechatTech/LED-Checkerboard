@@ -161,6 +161,18 @@ class CheckerBoardGUI(tk.Tk):
                         print("Invalid move: that square already has a checker.")
                         self.selected_piece = None
                         return
+
+            # If jumping, remove the checker being jumped over
+            if x_change == 2 * square_size and y_change == 2 * square_size:
+                middle_x = (old_x + new_x) / 2
+                middle_y = (old_y + new_y) / 2
+
+                for piece in self.pieces:
+                    if piece.x == middle_x and piece.y == middle_y:
+                        self.canvas.delete(piece.canvas_id)
+                        self.pieces.remove(piece)
+                        print("Captured piece:", piece.team)
+                        break
             
             self.canvas.coords(self.selected_piece.canvas_id, new_x, new_y)
 
