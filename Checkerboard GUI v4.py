@@ -88,6 +88,9 @@ class CheckerBoardGUI(tk.Tk):
         # Used to keep track of which checker is selected
         self.selected_piece = None
 
+        # Red starts first
+        self.current_turn = "R"
+
         # Allow mouse clicks on the canvas
         self.canvas.bind("<Button-1>", self.on_canvas_click)
         
@@ -100,6 +103,11 @@ class CheckerBoardGUI(tk.Tk):
             piece_x, piece_y = self.canvas.coords(piece.canvas_id)
 
             if abs(clicked_x - piece_x) < 35 and abs(clicked_y - piece_y) < 35:
+                
+                if piece.team != self.current_turn:
+                    print("It is not your turn.")
+                    return
+                
                 self.selected_piece = piece
                 print("Selected piece:", piece.team)
                 return
@@ -156,6 +164,14 @@ class CheckerBoardGUI(tk.Tk):
             self.selected_piece.y = new_y
 
             print("Moved piece to:", new_x, new_y)
+
+            # Switch turns after a successful move
+            if self.current_turn == "B":
+                self.current_turn = "R"
+            else:
+                self.current_turn = "B"
+
+            print("Current turn:", self.current_turn)
 
             self.selected_piece = None
     
