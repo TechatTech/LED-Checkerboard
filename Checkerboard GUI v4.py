@@ -128,6 +128,19 @@ class CheckerBoardGUI(tk.Tk):
                 print("Invalid move: checkers must move diagonally one square.")
                 self.selected_piece = None
                 return
+
+            # Enforce forward movement
+            if self.selected_piece.team == "B":
+                if new_y <= old_y:
+                    print("Invalid move: blue pieces must move forward.")
+                    self.selected_piece = None
+                    return
+
+            if self.selected_piece.team == "R":
+                if new_y >= old_y:
+                    print("Invalid move: red pieces must move forward.")
+                    self.selected_piece = None
+                    return
             
             # Do not allow moving onto another checker
             for piece in self.pieces:
