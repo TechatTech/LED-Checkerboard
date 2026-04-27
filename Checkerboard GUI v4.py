@@ -206,6 +206,34 @@ class CheckerBoardGUI(tk.Tk):
 
             print("Current turn:", self.current_turn)
     
+    def can_jump_again(self, piece):
+        start_x = 42
+        start_y = 40
+        square_size = 80
+
+        directions = [(-2, -2), (2, -2), (-2, 2), (2, 2)]
+
+        for col_change, row_change in directions:
+            new_x = piece.x + col_change * square_size
+            new_y = piece.y + row_change * square_size
+
+            middle_x = piece.x + (col_change // 2) * square_size
+            middle_y = piece.y + (row_change // 2) * square_size
+
+            middle_piece = None
+            landing_empty = True
+
+            for other in self.pieces:
+                if other.x == middle_x and other.y == middle_y:
+                    middle_piece = other
+                if other.x == new_x and other.y == new_y:
+                    landing_empty = False
+
+            if middle_piece and middle_piece.team != piece.team and landing_empty:
+                return True
+
+        return False
+    
     def update_counter1_image(self):
         # Update the canvas image to the current counter 1 value
         self.canvas.itemconfig(self.counter1_image_id, image=self.number_images[self.counter1_value])
