@@ -233,9 +233,11 @@ class CheckerBoardGUI(tk.Tk):
             new_x = piece.x + col_change * square_size
             new_y = piece.y + row_change * square_size
 
-            highlight = self.canvas.create_oval(
-                new_x - 12, new_y - 12,
-                new_x + 12, new_y + 12
+            highlight = self.canvas.create_rectangle(
+                new_x - 40, new_y - 40,
+                new_x + 40, new_y + 40,
+                outline= "yellow",
+                width= 4
             )
 
             self.highlighted_squares.append(highlight)
