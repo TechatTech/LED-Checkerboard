@@ -138,7 +138,6 @@ class CheckerBoardGUI(tk.Tk):
             ):
                 print("Invalid Move: Checkers must move diagonally.")
                 self.selected_piece = None
-                returnelected_piece = None
                 return
 
             # Enforce forward movement
