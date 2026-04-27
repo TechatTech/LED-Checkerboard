@@ -349,7 +349,9 @@ class CheckerBoardGUI(tk.Tk):
             return  
 
         # Otherwise show normal moves
-        if piece.team == "R":
+        if piece.king == True:
+            directions = [(-1, -1), (1, -1), (-1, 1), (1, 1)]
+        elif piece.team == "R":
             directions = [(-1, -1), (1, -1)]
         else:
             directions = [(-1, 1), (1, 1)]
