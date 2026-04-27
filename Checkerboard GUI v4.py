@@ -131,6 +131,18 @@ class CheckerBoardGUI(tk.Tk):
             new_x = start_x + col * square_size
             new_y = start_y + row * square_size
 
+            # Prevent moves outside the board
+            board_min_x = start_x
+            board_max_x = start_x + 7 * square_size
+            board_min_y = start_y
+            board_max_y = start_y + 7 * square_size
+
+            if new_x < board_min_x or new_x > board_max_x or new_y < board_min_y or new_y > board_max_y:
+                print("Invalid Move: You cannot move off the board.")
+                self.selected_piece = None
+                self.clear_highlights()
+                return
+
             old_x = self.selected_piece.x
             old_y = self.selected_piece.y
 
