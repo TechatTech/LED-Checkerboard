@@ -88,6 +88,9 @@ class CheckerBoardGUI(tk.Tk):
         # Used to keep track of which checker is selected
         self.selected_piece = None
 
+        # Used to highlight the valid moves of the selected checker
+        self.highlighted_squares = []
+
         # Red starts first
         self.current_turn = "R"
 
@@ -110,6 +113,9 @@ class CheckerBoardGUI(tk.Tk):
                 
                 self.selected_piece = piece
                 print("Selected piece:", piece.team)
+
+                self.highlight_valid_moves(piece)
+                
                 return
 
         # If no piece was clicked, move selected piece
@@ -191,9 +197,11 @@ class CheckerBoardGUI(tk.Tk):
 
             print("Moved piece to:", new_x, new_y)
 
+            self.clear_highlights()
+
             # If a jump was made and another jump is possible, keep the same turn
             if x_change == 2 * square_size and y_change == 2 * square_size:
-                if self.can_jump_again(self.selected_piece):
+                if self.double_jump(self.selected_piece):
                     print("Double jump available. Same player goes again.")
                     return
 
@@ -205,7 +213,34 @@ class CheckerBoardGUI(tk.Tk):
 
             print("Current turn:", self.current_turn)
     
-    def can_jump_again(self, piece):
+    def clear_highlights(self):
+        for highlight in self.highlighted_squares:
+            self.canvas.delete(highlight)
+
+        self.highlighted_squares = []
+
+    def highlight_valid_moves(self, piece):
+        self.clear_highlights()
+
+        square_size = 80
+
+        if piece.team == "R":
+            directions = [(-1, -1), (1, -1)]
+        else:
+            directions = [(-1, 1), (1, 1)]
+
+        for col_change, row_change in directions:
+            new_x = piece.x + col_change * square_size
+            new_y = piece.y + row_change * square_size
+
+            highlight = self.canvas.create_oval(
+                new_x - 12, new_y - 12,
+                new_x + 12, new_y + 12
+            )
+
+            self.highlighted_squares.append(highlight)
+    
+    def double_jump(self, piece):
         start_x = 42
         start_y = 40
         square_size = 80
