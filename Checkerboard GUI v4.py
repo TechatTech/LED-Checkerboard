@@ -192,6 +192,12 @@ class CheckerBoardGUI(tk.Tk):
 
             print("Moved piece to:", new_x, new_y)
 
+            # If a jump was made and another jump is possible, keep the same turn
+            if x_change == 2 * square_size and y_change == 2 * square_size:
+                if self.can_jump_again(self.selected_piece):
+                    print("Double jump available. Same player goes again.")
+                    return
+
             # Switch turns after a successful move
             if self.current_turn == "B":
                 self.current_turn = "R"
@@ -199,8 +205,6 @@ class CheckerBoardGUI(tk.Tk):
                 self.current_turn = "B"
 
             print("Current turn:", self.current_turn)
-
-            self.selected_piece = None
     
     def update_counter1_image(self):
         # Update the canvas image to the current counter 1 value
