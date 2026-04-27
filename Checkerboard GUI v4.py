@@ -5,6 +5,7 @@ class Piece:
     def __init__(self, team, image):
         self.team = team
         self.image = image
+        self.king = False
 
 class CheckerBoardGUI(tk.Tk):
     def __init__(self):
@@ -158,18 +159,19 @@ class CheckerBoardGUI(tk.Tk):
                 self.selected_piece = None
                 return
 
-            # Enforce forward movement
-            if self.selected_piece.team == "B":
-                if new_y <= old_y:
-                    print("Invalid Move: Blue pieces must move forward.")
-                    self.selected_piece = None
-                    return
+            # Enforce forward movement unless the piece is a king
+            if self.selected_piece.king == False:
+                if self.selected_piece.team == "B":
+                    if new_y <= old_y:
+                        print("Invalid Move: Blue pieces must move forward.")
+                        self.selected_piece = None
+                        return
 
-            if self.selected_piece.team == "R":
-                if new_y >= old_y:
-                    print("Invalid Move: Red pieces must move forward.")
-                    self.selected_piece = None
-                    return
+                if self.selected_piece.team == "R":
+                    if new_y >= old_y:
+                        print("Invalid Move: Red pieces must move forward.")
+                        self.selected_piece = None
+                        return
             
             # Do not allow moving onto another checker
             for piece in self.pieces:
@@ -206,6 +208,15 @@ class CheckerBoardGUI(tk.Tk):
 
             self.selected_piece.x = new_x
             self.selected_piece.y = new_y
+
+            # Make piece a king if it reaches the opposite side
+            if self.selected_piece.team == "R" and new_y == start_y:
+                self.selected_piece.king = True
+                print("Red piece became a king!")
+
+            if self.selected_piece.team == "B" and new_y == start_y + 7 * square_size:
+                self.selected_piece.king = True
+                print("Blue piece became a king!")
 
             print("Moved piece to:", new_x, new_y)
 
