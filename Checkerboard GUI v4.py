@@ -255,6 +255,13 @@ class CheckerBoardGUI(tk.Tk):
         self.clear_highlights()
 
         square_size = 80
+        start_x = 42
+        start_y = 40
+
+        board_min_x = start_x
+        board_max_x = start_x + 7 * square_size
+        board_min_y = start_y
+        board_max_y = start_y + 7 * square_size
 
         if piece.team == "R":
             directions = [(-1, -1), (1, -1)]
@@ -264,6 +271,9 @@ class CheckerBoardGUI(tk.Tk):
         for col_change, row_change in directions:
             new_x = piece.x + col_change * square_size
             new_y = piece.y + row_change * square_size
+
+            if new_x < board_min_x or new_x > board_max_x or new_y < board_min_y or new_y > board_max_y:
+                continue
 
             # Check if square is empty
             square_is_empty = True
@@ -291,6 +301,9 @@ class CheckerBoardGUI(tk.Tk):
         for col_change, row_change in jump_directions:
             new_x = piece.x + col_change * square_size
             new_y = piece.y + row_change * square_size
+
+            if new_x < board_min_x or new_x > board_max_x or new_y < board_min_y or new_y > board_max_y:
+                continue
 
             middle_x = piece.x + (col_change // 2) * square_size
             middle_y = piece.y + (row_change // 2) * square_size
