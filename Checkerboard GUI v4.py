@@ -296,7 +296,12 @@ class CheckerBoardGUI(tk.Tk):
             self.highlighted_squares.append(highlight)
 
         # Highlight possible jump moves
-        jump_directions = [(-2, -2), (2, -2), (-2, 2), (2, 2)]
+        if piece.king == True:
+            jump_directions = [(-2, -2), (2, -2), (-2, 2), (2, 2)]
+        elif piece.team == "R":
+            jump_directions = [(-2, -2), (2, -2)]
+        else:
+            jump_directions = [(-2, 2), (2, 2)]
 
         for col_change, row_change in jump_directions:
             new_x = piece.x + col_change * square_size
