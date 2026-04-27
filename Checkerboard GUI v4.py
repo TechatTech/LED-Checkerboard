@@ -200,6 +200,9 @@ class CheckerBoardGUI(tk.Tk):
                         self.canvas.delete(piece.canvas_id)
                         self.pieces.remove(piece)
                         print("Captured Piece:", piece.team)
+
+                        self.update_checker_counts()
+                        
                         captured_piece_found = True
                         break
 
@@ -335,6 +338,22 @@ class CheckerBoardGUI(tk.Tk):
                 return True
 
         return False
+    
+    def update_checker_counts(self):
+        red_count = 0
+        blue_count = 0
+
+        for piece in self.pieces:
+            if piece.team == "R":
+                red_count += 1
+            elif piece.team == "B":
+                blue_count += 1
+
+        self.counter1_value = red_count
+        self.counter2_value = blue_count
+
+        self.update_counter1_image()
+        self.update_counter2_image()
     
     def update_counter1_image(self):
         # Update the canvas image to the current counter 1 value
