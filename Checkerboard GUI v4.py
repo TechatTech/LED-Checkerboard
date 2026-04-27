@@ -217,10 +217,14 @@ class CheckerBoardGUI(tk.Tk):
             # Make piece a king if it reaches the opposite side
             if self.selected_piece.team == "R" and new_y == start_y:
                 self.selected_piece.king = True
+                self.selected_piece.image = self.red_king_image
+                self.canvas.itemconfig(self.selected_piece.canvas_id, image=self.red_king_image)
                 print("Red piece became a king!")
 
             if self.selected_piece.team == "B" and new_y == start_y + 7 * square_size:
                 self.selected_piece.king = True
+                self.selected_piece.image = self.blue_king_image
+                self.canvas.itemconfig(self.selected_piece.canvas_id, image=self.blue_king_image)
                 print("Blue piece became a king!")
 
             print("Moved piece to:", new_x, new_y)
