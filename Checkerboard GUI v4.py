@@ -1,10 +1,12 @@
 import tkinter as tk
+from tkinter import messagebox
 import os
 
 class Piece:
     def __init__(self, team, image):
         self.team = team
         self.image = image
+        self.king = False
 
 class CheckerBoardGUI(tk.Tk):
     def __init__(self):
@@ -25,6 +27,8 @@ class CheckerBoardGUI(tk.Tk):
         # Load checker images
         self.blue_checker_image = tk.PhotoImage(file=r"C:\Users\domin\AppData\Local\Programs\Python\Python313\Project_folder\blue_checkers\Blue checker.png")
         self.red_checker_image = tk.PhotoImage(file=r"C:\Users\domin\AppData\Local\Programs\Python\Python313\Project_folder\red_checkers\Red checker.png")
+        self.blue_king_image = tk.PhotoImage(file=r"C:\Users\domin\AppData\Local\Programs\Python\Python313\Project_folder\blue_checkers\Blue king.png")
+        self.red_king_image = tk.PhotoImage(file=r"C:\Users\domin\AppData\Local\Programs\Python\Python313\Project_folder\red_checkers\Red king.png")
 
         # Create checker pieces
         self.pieces = []
@@ -88,6 +92,12 @@ class CheckerBoardGUI(tk.Tk):
         # Used to keep track of which checker is selected
         self.selected_piece = None
 
+        # Used to highlight the valid moves of the selected checker
+        self.highlighted_squares = []
+
+        #Used to prevent users from clicking non-highlighted squares
+        self.valid_move_positions = []
+
         # Red starts first
         self.current_turn = "R"
 
@@ -110,6 +120,9 @@ class CheckerBoardGUI(tk.Tk):
                 
                 self.selected_piece = piece
                 print("Selected piece:", piece.team)
+
+                self.highlight_valid_moves(piece)
+                
                 return
 
         # If no piece was clicked, move selected piece
@@ -125,6 +138,24 @@ class CheckerBoardGUI(tk.Tk):
             new_x = start_x + col * square_size
             new_y = start_y + row * square_size
 
+            # Prevent moves outside the board
+            board_min_x = start_x
+            board_max_x = start_x + 7 * square_size
+            board_min_y = start_y
+            board_max_y = start_y + 7 * square_size
+
+            if new_x < board_min_x or new_x > board_max_x or new_y < board_min_y or new_y > board_max_y:
+                print("Invalid Move: You cannot move off the board.")
+                self.selected_piece = None
+                self.clear_highlights()
+                return
+
+            if (new_x, new_y) not in self.valid_move_positions:
+                print("Invalid Move: You must click a highlighted square.")
+                self.selected_piece = None
+                self.clear_highlights()
+                return
+            
             old_x = self.selected_piece.x
             old_y = self.selected_piece.y
 
@@ -138,21 +169,21 @@ class CheckerBoardGUI(tk.Tk):
             ):
                 print("Invalid Move: Checkers must move diagonally.")
                 self.selected_piece = None
-                returnelected_piece = None
                 return
 
-            # Enforce forward movement
-            if self.selected_piece.team == "B":
-                if new_y <= old_y:
-                    print("Invalid Move: Blue pieces must move forward.")
-                    self.selected_piece = None
-                    return
+            # Enforce forward movement unless the piece is a king
+            if self.selected_piece.king == False:
+                if self.selected_piece.team == "B":
+                    if new_y <= old_y:
+                        print("Invalid Move: Blue pieces must move forward.")
+                        self.selected_piece = None
+                        return
 
-            if self.selected_piece.team == "R":
-                if new_y >= old_y:
-                    print("Invalid Move: Red pieces must move forward.")
-                    self.selected_piece = None
-                    return
+                if self.selected_piece.team == "R":
+                    if new_y >= old_y:
+                        print("Invalid Move: Red pieces must move forward.")
+                        self.selected_piece = None
+                        return
             
             # Do not allow moving onto another checker
             for piece in self.pieces:
@@ -179,6 +210,11 @@ class CheckerBoardGUI(tk.Tk):
                         self.canvas.delete(piece.canvas_id)
                         self.pieces.remove(piece)
                         print("Captured Piece:", piece.team)
+
+                        self.update_checker_counts()
+
+                        self.check_winner()
+                        
                         captured_piece_found = True
                         break
 
@@ -190,7 +226,29 @@ class CheckerBoardGUI(tk.Tk):
             self.selected_piece.x = new_x
             self.selected_piece.y = new_y
 
+            # Make piece a king if it reaches the opposite side
+            if self.selected_piece.team == "R" and new_y == start_y:
+                self.selected_piece.king = True
+                self.selected_piece.image = self.red_king_image
+                self.canvas.itemconfig(self.selected_piece.canvas_id, image=self.red_king_image)
+                print("Red piece became a king!")
+
+            if self.selected_piece.team == "B" and new_y == start_y + 7 * square_size:
+                self.selected_piece.king = True
+                self.selected_piece.image = self.blue_king_image
+                self.canvas.itemconfig(self.selected_piece.canvas_id, image=self.blue_king_image)
+                print("Blue piece became a king!")
+
             print("Moved piece to:", new_x, new_y)
+
+            self.clear_highlights()
+
+            # If a jump was made and another jump is possible, keep the same turn
+            if x_change == 2 * square_size and y_change == 2 * square_size:
+                if self.double_jump(self.selected_piece):
+                    print("Double jump available. Same player goes again.")
+                    self.highlight_valid_moves(self.selected_piece)
+                    return
 
             # Switch turns after a successful move
             if self.current_turn == "B":
@@ -199,8 +257,213 @@ class CheckerBoardGUI(tk.Tk):
                 self.current_turn = "B"
 
             print("Current turn:", self.current_turn)
+    
+    def check_winner(self):
+        red_count = 0
+        blue_count = 0
 
-            self.selected_piece = None
+        for piece in self.pieces:
+            if piece.team == "R":
+                red_count += 1
+            elif piece.team == "B":
+                blue_count += 1
+
+        if red_count == 0:
+            messagebox.showinfo("Game Over", "Blue wins!")
+            self.canvas.unbind("<Button-1>")
+
+        elif blue_count == 0:
+            messagebox.showinfo("Game Over", "Red wins!")
+            self.canvas.unbind("<Button-1>")
+    
+    def clear_highlights(self):
+        for highlight in self.highlighted_squares:
+            self.canvas.delete(highlight)
+
+        self.highlighted_squares = []
+        self.valid_move_positions = []
+
+    def highlight_valid_moves(self, piece):
+        self.clear_highlights()
+
+        square_size = 80
+        start_x = 42
+        start_y = 40
+
+        board_min_x = start_x
+        board_max_x = start_x + 7 * square_size
+        board_min_y = start_y
+        board_max_y = start_y + 7 * square_size
+
+        # Track if any jump exists
+        jump_exists = False
+        jump_positions = []
+
+        # Jump directions 
+        if piece.king:
+            jump_directions = [(-2, -2), (2, -2), (-2, 2), (2, 2)]
+        elif piece.team == "R":
+            jump_directions = [(-2, -2), (2, -2)]
+        else:
+            jump_directions = [(-2, 2), (2, 2)]
+
+        # Check for jumps first
+        for col_change, row_change in jump_directions:
+            new_x = piece.x + col_change * square_size
+            new_y = piece.y + row_change * square_size
+
+            # Boundary check
+            if new_x < board_min_x or new_x > board_max_x or new_y < board_min_y or new_y > board_max_y:
+                continue
+
+            middle_x = piece.x + (col_change // 2) * square_size
+            middle_y = piece.y + (row_change // 2) * square_size
+
+            middle_piece = None
+            landing_empty = True
+
+            for other_piece in self.pieces:
+                if other_piece.x == middle_x and other_piece.y == middle_y:
+                    middle_piece = other_piece
+
+                if other_piece.x == new_x and other_piece.y == new_y:
+                    landing_empty = False
+
+            if middle_piece is not None and middle_piece.team != piece.team and landing_empty:
+                jump_exists = True
+                jump_positions.append((new_x, new_y))
+
+        # If jumps exist, only show jumps
+        if jump_exists:
+            for jump_x, jump_y in jump_positions:
+                highlight = self.canvas.create_rectangle(
+                    jump_x - 40, jump_y - 40,
+                    jump_x + 40, jump_y + 40,
+                    outline="red",
+                    width=4
+                )
+
+                self.highlighted_squares.append(highlight)
+                self.valid_move_positions.append((jump_x, jump_y))
+
+            return  
+
+        # Otherwise show normal moves
+        if piece.king == True:
+            directions = [(-1, -1), (1, -1), (-1, 1), (1, 1)]
+        elif piece.team == "R":
+            directions = [(-1, -1), (1, -1)]
+        else:
+            directions = [(-1, 1), (1, 1)]
+
+        for col_change, row_change in directions:
+            new_x = piece.x + col_change * square_size
+            new_y = piece.y + row_change * square_size
+
+            # Boundary check
+            if new_x < board_min_x or new_x > board_max_x or new_y < board_min_y or new_y > board_max_y:
+                continue
+
+            square_is_empty = True
+
+            for other_piece in self.pieces:
+                if other_piece.x == new_x and other_piece.y == new_y:
+                    square_is_empty = False
+
+            if square_is_empty == False:
+                continue
+
+            highlight = self.canvas.create_rectangle(
+                new_x - 40, new_y - 40,
+                new_x + 40, new_y + 40,
+                outline="yellow",
+                width=4
+            )
+
+            self.highlighted_squares.append(highlight)
+            self.valid_move_positions.append((new_x, new_y))
+
+        # Highlight possible jump moves
+        if piece.king == True:
+            jump_directions = [(-2, -2), (2, -2), (-2, 2), (2, 2)]
+        elif piece.team == "R":
+            jump_directions = [(-2, -2), (2, -2)]
+        else:
+            jump_directions = [(-2, 2), (2, 2)]
+
+        for col_change, row_change in jump_directions:
+            new_x = piece.x + col_change * square_size
+            new_y = piece.y + row_change * square_size
+
+            if new_x < board_min_x or new_x > board_max_x or new_y < board_min_y or new_y > board_max_y:
+                continue
+
+            middle_x = piece.x + (col_change // 2) * square_size
+            middle_y = piece.y + (row_change // 2) * square_size
+
+            middle_piece = None
+            landing_empty = True
+
+            for other_piece in self.pieces:
+                if other_piece.x == middle_x and other_piece.y == middle_y:
+                    middle_piece = other_piece
+
+                if other_piece.x == new_x and other_piece.y == new_y:
+                    landing_empty = False
+
+            if middle_piece is not None and middle_piece.team != piece.team and landing_empty:
+                highlight = self.canvas.create_rectangle(
+                    new_x - 40, new_y - 40,
+                    new_x + 40, new_y + 40,
+                    outline = "red",
+                    width = 4
+                )
+
+        self.highlighted_squares.append(highlight)
+    
+    def double_jump(self, piece):
+        start_x = 42
+        start_y = 40
+        square_size = 80
+
+        directions = [(-2, -2), (2, -2), (-2, 2), (2, 2)]
+
+        for col_change, row_change in directions:
+            new_x = piece.x + col_change * square_size
+            new_y = piece.y + row_change * square_size
+
+            middle_x = piece.x + (col_change // 2) * square_size
+            middle_y = piece.y + (row_change // 2) * square_size
+
+            middle_piece = None
+            landing_empty = True
+
+            for other in self.pieces:
+                if other.x == middle_x and other.y == middle_y:
+                    middle_piece = other
+                if other.x == new_x and other.y == new_y:
+                    landing_empty = False
+
+            if middle_piece and middle_piece.team != piece.team and landing_empty:
+                return True
+
+        return False
+    
+    def update_checker_counts(self):
+        red_count = 0
+        blue_count = 0
+
+        for piece in self.pieces:
+            if piece.team == "R":
+                red_count += 1
+            elif piece.team == "B":
+                blue_count += 1
+
+        self.counter1_value = red_count
+        self.counter2_value = blue_count
+
+        self.update_counter1_image()
+        self.update_counter2_image()
     
     def update_counter1_image(self):
         # Update the canvas image to the current counter 1 value
