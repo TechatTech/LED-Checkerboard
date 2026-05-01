@@ -1,6 +1,27 @@
 import tkinter as tk
 from tkinter import messagebox
 import os
+import RPi.GPIO as GPIO
+
+# ---------------- GPIO SETUP ----------------
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
+
+LED_MAP = {
+    (0,1): (2,3), (0,3): (4,5), (0,5): (6,7), (0,7): (8,9),
+    (1,0): (10,11), (1,2): (12,13), (1,4): (14,15), (1,6): (16,17),
+    (2,1): (18,19), (2,3): (20,21), (2,5): (22,23), (2,7): (24,25),
+    (3,0): (26,27), (3,2): (5,6), (3,4): (12,16), (3,6): (19,20),
+    (4,1): (21,22), (4,3): (23,24), (4,5): (25,8), (4,7): (7,1),
+    (5,0): (0,11), (5,2): (9,10), (5,4): (13,14), (5,6): (15,18),
+    (6,1): (2,4), (6,3): (6,8), (6,5): (10,12), (6,7): (14,16),
+    (7,0): (18,20), (7,2): (22,24), (7,4): (26,27), (7,6): (3,5),
+}
+
+for red_pin, blue_pin in LED_MAP.values():
+    GPIO.setup(red_pin, GPIO.OUT)
+    GPIO.setup(blue_pin, GPIO.OUT)
+
 
 class Piece:
     def __init__(self, team, image):
@@ -486,3 +507,39 @@ class CheckerBoardGUI(tk.Tk):
 if __name__ == "__main__":
     app = CheckerBoardGUI()
     app.mainloop()
+
+# ---------------- LED FUNCTIONS ----------------
+    def get_board_position(self, x, y):
+        start_x = 42
+        start_y = 40
+        square_size = 80
+
+        col = int(round((x - start_x) / square_size))
+        row = int(round((y - start_y) / square_size))
+
+        return row, col
+
+    def update_led_board(self):
+        for red_pin, blue_pin in LED_MAP.values():
+            GPIO.output(red_pin, GPIO.LOW)
+            GPIO.output(blue_pin, GPIO.LOW)
+
+        for piece in self.pieces:
+            row, col = self.get_board_position(piece.x, piece.y)
+
+            if (row, col) in LED_MAP:
+                red_pin, blue_pin = LED_MAP[(row, col)]
+
+                if piece.team == "R":
+                    GPIO.output(red_pin, GPIO.HIGH)
+                else:
+                    GPIO.output(blue_pin, GPIO.HIGH)
+
+
+    # ---------------- CLEANUP ----------------
+if __name__ == "__main__":
+    try:
+        app = CheckerBoardGUI()
+        app.mainloop()
+    finally:
+        GPIO.cleanup()
