@@ -254,6 +254,8 @@ class CheckerBoardGUI(tk.Tk):
             self.selected_piece.x = new_x
             self.selected_piece.y = new_y
 
+            self.update_led_board()
+
             # Make piece a king if it reaches the opposite side
             if self.selected_piece.team == "R" and new_y == start_y:
                 self.selected_piece.king = True
