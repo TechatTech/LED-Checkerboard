@@ -129,6 +129,8 @@ class CheckerBoardGUI(tk.Tk):
 
         # Allow mouse clicks on the canvas
         self.canvas.bind("<Button-1>", self.on_canvas_click)
+
+        self.update_led_board()
         
     def on_canvas_click(self, event):
         clicked_x = event.x
