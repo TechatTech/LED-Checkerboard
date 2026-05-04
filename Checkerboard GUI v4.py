@@ -3,7 +3,7 @@ from tkinter import messagebox
 import os
 
 try:
-    from gpiozero import LED
+    from gpiozero import DigitalOutputDevice
     GPIO_AVAILABLE = True
 except ImportError:
     GPIO_AVAILABLE = False
