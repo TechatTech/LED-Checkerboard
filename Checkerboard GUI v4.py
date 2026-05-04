@@ -382,44 +382,6 @@ class CheckerBoardGUI(tk.Tk):
 
             self.highlighted_squares.append(highlight)
             self.valid_move_positions.append((new_x, new_y))
-
-        # Highlight possible jump moves
-        if piece.king == True:
-            jump_directions = [(-2, -2), (2, -2), (-2, 2), (2, 2)]
-        elif piece.team == "R":
-            jump_directions = [(-2, -2), (2, -2)]
-        else:
-            jump_directions = [(-2, 2), (2, 2)]
-
-        for col_change, row_change in jump_directions:
-            new_x = piece.x + col_change * square_size
-            new_y = piece.y + row_change * square_size
-
-            if new_x < board_min_x or new_x > board_max_x or new_y < board_min_y or new_y > board_max_y:
-                continue
-
-            middle_x = piece.x + (col_change // 2) * square_size
-            middle_y = piece.y + (row_change // 2) * square_size
-
-            middle_piece = None
-            landing_empty = True
-
-            for other_piece in self.pieces:
-                if other_piece.x == middle_x and other_piece.y == middle_y:
-                    middle_piece = other_piece
-
-                if other_piece.x == new_x and other_piece.y == new_y:
-                    landing_empty = False
-
-            if middle_piece is not None and middle_piece.team != piece.team and landing_empty:
-                highlight = self.canvas.create_rectangle(
-                    new_x - 40, new_y - 40,
-                    new_x + 40, new_y + 40,
-                    outline = "red",
-                    width = 4
-                )
-
-        self.highlighted_squares.append(highlight)
     
     def double_jump(self, piece):
         start_x = 42
