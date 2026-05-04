@@ -25,10 +25,10 @@ class CheckerBoardGUI(tk.Tk):
         self.canvas.create_image(0, 0, image=self.bg_image, anchor='nw')
 
         # Load checker images
-        self.blue_checker_image = tk.PhotoImage(file=r"C:\Users\domin\AppData\Local\Programs\Python\Python313\Project_folder\blue_checkers\Blue checker.png")
-        self.red_checker_image = tk.PhotoImage(file=r"C:\Users\domin\AppData\Local\Programs\Python\Python313\Project_folder\red_checkers\Red checker.png")
-        self.blue_king_image = tk.PhotoImage(file=r"C:\Users\domin\AppData\Local\Programs\Python\Python313\Project_folder\blue_checkers\Blue king.png")
-        self.red_king_image = tk.PhotoImage(file=r"C:\Users\domin\AppData\Local\Programs\Python\Python313\Project_folder\red_checkers\Red king.png")
+        self.blue_checker_image = tk.PhotoImage(file="Project_folder/blue_checkers/Blue checker.png")
+        self.red_checker_image = tk.PhotoImage(file="Project_folder/red_checkers/Red checker.png")
+        self.blue_king_image = tk.PhotoImage(file="Project_folder/blue_checkers/Blue king.png")
+        self.red_king_image = tk.PhotoImage(file="Project_folder/red_checkers/Red king.png")
 
         # Create checker pieces
         self.pieces = []
