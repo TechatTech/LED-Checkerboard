@@ -237,6 +237,7 @@ class CheckerBoardGUI(tk.Tk):
 
                         self.canvas.delete(piece.canvas_id)
                         self.pieces.remove(piece)
+                        self.update_led_board()
                         print("Captured Piece:", piece.team)
 
                         self.update_checker_counts()
