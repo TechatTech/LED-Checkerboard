@@ -107,6 +107,26 @@ class CheckerBoardGUI(tk.Tk):
         # Red starts first
         self.current_turn = "R"
 
+        # Shift register GPIO pins
+        if GPIO_AVAILABLE:
+            self.data_pin = DigitalOutputDevice(17)   # DS
+            self.clock_pin = DigitalOutputDevice(27)  # SH_CP
+            self.latch_pin = DigitalOutputDevice(22)  # ST_CP
+
+        # Maps GUI square positions to LED index
+        self.led_board = {
+            (42, 40): 0, (122, 40): 1, (202, 40): 2, (282, 40): 3, (362, 40): 4, (442, 40): 5, (522, 40): 6, (602, 40): 7,
+            (42, 120): 8, (122, 120): 9, (202, 120): 10, (282, 120): 11, (362, 120): 12, (442, 120): 13, (522, 120): 14, (602, 120): 15,
+            (42, 200): 16, (122, 200): 17, (202, 200): 18, (282, 200): 19, (362, 200): 20, (442, 200): 21, (522, 200): 22, (602, 200): 23,
+            (42, 280): 24, (122, 280): 25, (202, 280): 26, (282, 280): 27, (362, 280): 28, (442, 280): 29, (522, 280): 30, (602, 280): 31,
+            (42, 360): 32, (122, 360): 33, (202, 360): 34, (282, 360): 35, (362, 360): 36, (442, 360): 37, (522, 360): 38, (602, 360): 39,
+            (42, 440): 40, (122, 440): 41, (202, 440): 42, (282, 440): 43, (362, 440): 44, (442, 440): 45, (522, 440): 46, (602, 440): 47,
+            (42, 520): 48, (122, 520): 49, (202, 520): 50, (282, 520): 51, (362, 520): 52, (442, 520): 53, (522, 520): 54, (602, 520): 55,
+            (42, 600): 56, (122, 600): 57, (202, 600): 58, (282, 600): 59, (362, 600): 60, (442, 600): 61, (522, 600): 62, (602, 600): 63
+        }
+
+        self.led_states = [0] * 64
+
         # Allow mouse clicks on the canvas
         self.canvas.bind("<Button-1>", self.on_canvas_click)
         
@@ -263,6 +283,41 @@ class CheckerBoardGUI(tk.Tk):
                 self.current_turn = "B"
 
             print("Current turn:", self.current_turn)
+
+    def shift_out_leds(self):
+        if GPIO_AVAILABLE == False:
+            return
+    
+        self.latch_pin.off()
+    
+        # Send LED states from last LED to first LED
+        for state in reversed(self.led_states):
+            self.clock_pin.off()
+    
+            if state == 1:
+                self.data_pin.on()
+            else:
+                self.data_pin.off()
+    
+            self.clock_pin.on()
+    
+        self.latch_pin.on()
+    
+    
+    def update_led_board(self):
+        if GPIO_AVAILABLE == False:
+            return
+    
+        self.led_states = [0] * 64
+    
+        for piece in self.pieces:
+            position = (piece.x, piece.y)
+    
+            if position in self.led_board:
+                led_index = self.led_board[position]
+                self.led_states[led_index] = 1
+    
+        self.shift_out_leds()
     
     def check_winner(self):
         red_count = 0
