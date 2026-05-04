@@ -2,6 +2,12 @@ import tkinter as tk
 from tkinter import messagebox
 import os
 
+try:
+    from gpiozero import LED
+    GPIO_AVAILABLE = True
+except ImportError:
+    GPIO_AVAILABLE = False
+
 class Piece:
     def __init__(self, team, image):
         self.team = team
