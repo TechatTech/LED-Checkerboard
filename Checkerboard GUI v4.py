@@ -1,27 +1,12 @@
 import tkinter as tk
 from tkinter import messagebox
 import os
-import RPi.GPIO as GPIO
 
-# ---------------- GPIO SETUP ----------------
-GPIO.setmode(GPIO.BCM)
-GPIO.setwarnings(False)
-
-LED_MAP = {
-    (0,1): (2,3), (0,3): (4,5), (0,5): (6,7), (0,7): (8,9),
-    (1,0): (10,11), (1,2): (12,13), (1,4): (14,15), (1,6): (16,17),
-    (2,1): (18,19), (2,3): (20,21), (2,5): (22,23), (2,7): (24,25),
-    (3,0): (26,27), (3,2): (5,6), (3,4): (12,16), (3,6): (19,20),
-    (4,1): (21,22), (4,3): (23,24), (4,5): (25,8), (4,7): (7,1),
-    (5,0): (0,11), (5,2): (9,10), (5,4): (13,14), (5,6): (15,18),
-    (6,1): (2,4), (6,3): (6,8), (6,5): (10,12), (6,7): (14,16),
-    (7,0): (18,20), (7,2): (22,24), (7,4): (26,27), (7,6): (3,5),
-}
-
-for red_pin, blue_pin in LED_MAP.values():
-    GPIO.setup(red_pin, GPIO.OUT)
-    GPIO.setup(blue_pin, GPIO.OUT)
-
+try:
+    from gpiozero import DigitalOutputDevice
+    GPIO_AVAILABLE = True
+except ImportError:
+    GPIO_AVAILABLE = False
 
 class Piece:
     def __init__(self, team, image):
@@ -122,8 +107,30 @@ class CheckerBoardGUI(tk.Tk):
         # Red starts first
         self.current_turn = "R"
 
+        # Shift register GPIO pins
+        if GPIO_AVAILABLE:
+            self.data_pin = DigitalOutputDevice(17)   # DS
+            self.clock_pin = DigitalOutputDevice(27)  # SH_CP
+            self.latch_pin = DigitalOutputDevice(22)  # ST_CP
+
+        # Maps GUI square positions to LED index
+        self.led_board = {
+            (42, 40): 0, (122, 40): 1, (202, 40): 2, (282, 40): 3, (362, 40): 4, (442, 40): 5, (522, 40): 6, (602, 40): 7,
+            (42, 120): 8, (122, 120): 9, (202, 120): 10, (282, 120): 11, (362, 120): 12, (442, 120): 13, (522, 120): 14, (602, 120): 15,
+            (42, 200): 16, (122, 200): 17, (202, 200): 18, (282, 200): 19, (362, 200): 20, (442, 200): 21, (522, 200): 22, (602, 200): 23,
+            (42, 280): 24, (122, 280): 25, (202, 280): 26, (282, 280): 27, (362, 280): 28, (442, 280): 29, (522, 280): 30, (602, 280): 31,
+            (42, 360): 32, (122, 360): 33, (202, 360): 34, (282, 360): 35, (362, 360): 36, (442, 360): 37, (522, 360): 38, (602, 360): 39,
+            (42, 440): 40, (122, 440): 41, (202, 440): 42, (282, 440): 43, (362, 440): 44, (442, 440): 45, (522, 440): 46, (602, 440): 47,
+            (42, 520): 48, (122, 520): 49, (202, 520): 50, (282, 520): 51, (362, 520): 52, (442, 520): 53, (522, 520): 54, (602, 520): 55,
+            (42, 600): 56, (122, 600): 57, (202, 600): 58, (282, 600): 59, (362, 600): 60, (442, 600): 61, (522, 600): 62, (602, 600): 63
+        }
+
+        self.led_states = [0] * 64
+
         # Allow mouse clicks on the canvas
         self.canvas.bind("<Button-1>", self.on_canvas_click)
+
+        self.update_led_board()
         
     def on_canvas_click(self, event):
         clicked_x = event.x
@@ -230,6 +237,7 @@ class CheckerBoardGUI(tk.Tk):
 
                         self.canvas.delete(piece.canvas_id)
                         self.pieces.remove(piece)
+                        self.update_led_board()
                         print("Captured Piece:", piece.team)
 
                         self.update_checker_counts()
@@ -246,6 +254,8 @@ class CheckerBoardGUI(tk.Tk):
 
             self.selected_piece.x = new_x
             self.selected_piece.y = new_y
+
+            self.update_led_board()
 
             # Make piece a king if it reaches the opposite side
             if self.selected_piece.team == "R" and new_y == start_y:
@@ -278,6 +288,41 @@ class CheckerBoardGUI(tk.Tk):
                 self.current_turn = "B"
 
             print("Current turn:", self.current_turn)
+
+    def shift_out_leds(self):
+        if GPIO_AVAILABLE == False:
+            return
+    
+        self.latch_pin.off()
+    
+        # Send LED states from last LED to first LED
+        for state in reversed(self.led_states):
+            self.clock_pin.off()
+    
+            if state == 1:
+                self.data_pin.on()
+            else:
+                self.data_pin.off()
+    
+            self.clock_pin.on()
+    
+        self.latch_pin.on()
+    
+    
+    def update_led_board(self):
+        if GPIO_AVAILABLE == False:
+            return
+    
+        self.led_states = [0] * 64
+    
+        for piece in self.pieces:
+            position = (piece.x, piece.y)
+    
+            if position in self.led_board:
+                led_index = self.led_board[position]
+                self.led_states[led_index] = 1
+    
+        self.shift_out_leds()
     
     def check_winner(self):
         red_count = 0
@@ -404,44 +449,6 @@ class CheckerBoardGUI(tk.Tk):
             self.highlighted_squares.append(highlight)
             self.valid_move_positions.append((new_x, new_y))
 
-        # Highlight possible jump moves
-        if piece.king == True:
-            jump_directions = [(-2, -2), (2, -2), (-2, 2), (2, 2)]
-        elif piece.team == "R":
-            jump_directions = [(-2, -2), (2, -2)]
-        else:
-            jump_directions = [(-2, 2), (2, 2)]
-
-        for col_change, row_change in jump_directions:
-            new_x = piece.x + col_change * square_size
-            new_y = piece.y + row_change * square_size
-
-            if new_x < board_min_x or new_x > board_max_x or new_y < board_min_y or new_y > board_max_y:
-                continue
-
-            middle_x = piece.x + (col_change // 2) * square_size
-            middle_y = piece.y + (row_change // 2) * square_size
-
-            middle_piece = None
-            landing_empty = True
-
-            for other_piece in self.pieces:
-                if other_piece.x == middle_x and other_piece.y == middle_y:
-                    middle_piece = other_piece
-
-                if other_piece.x == new_x and other_piece.y == new_y:
-                    landing_empty = False
-
-            if middle_piece is not None and middle_piece.team != piece.team and landing_empty:
-                highlight = self.canvas.create_rectangle(
-                    new_x - 40, new_y - 40,
-                    new_x + 40, new_y + 40,
-                    outline = "red",
-                    width = 4
-                )
-
-        self.highlighted_squares.append(highlight)
-    
     def double_jump(self, piece):
         start_x = 42
         start_y = 40
@@ -507,39 +514,3 @@ class CheckerBoardGUI(tk.Tk):
 if __name__ == "__main__":
     app = CheckerBoardGUI()
     app.mainloop()
-
-# ---------------- LED FUNCTIONS ----------------
-    def get_board_position(self, x, y):
-        start_x = 42
-        start_y = 40
-        square_size = 80
-
-        col = int(round((x - start_x) / square_size))
-        row = int(round((y - start_y) / square_size))
-
-        return row, col
-
-    def update_led_board(self):
-        for red_pin, blue_pin in LED_MAP.values():
-            GPIO.output(red_pin, GPIO.LOW)
-            GPIO.output(blue_pin, GPIO.LOW)
-
-        for piece in self.pieces:
-            row, col = self.get_board_position(piece.x, piece.y)
-
-            if (row, col) in LED_MAP:
-                red_pin, blue_pin = LED_MAP[(row, col)]
-
-                if piece.team == "R":
-                    GPIO.output(red_pin, GPIO.HIGH)
-                else:
-                    GPIO.output(blue_pin, GPIO.HIGH)
-
-
-    # ---------------- CLEANUP ----------------
-if __name__ == "__main__":
-    try:
-        app = CheckerBoardGUI()
-        app.mainloop()
-    finally:
-        GPIO.cleanup()
